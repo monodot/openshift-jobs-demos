@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: envdemo
+spec:
+  parallelism: 1
+  completions: 1
+  template:
+    metadata:
+      name: envdemo
+    spec:
+      containers:
+      - name: envdemo
+        image: perl
+        command: ["perl",  "-wle", "foreach (sort keys %ENV) { print \"$_  =  $ENV{$_}\"; }"]
+        env:
+        - name: "GREETING_MESSAGE"
+          valueFrom:
+            configMapKeyRef:
+              key: greeting.message
+              name: envdemo
+      restartPolicy: OnFailure

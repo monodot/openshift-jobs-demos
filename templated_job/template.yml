@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: templatedjob
+  annotations:
+    openshift.io/display-name: "Templated Job T0001"
+    description: >-
+      An example job which can be created and run on demand.
+    openshift.io/documentation-url: "http://example.com/link/documentation"
+    openshift.io/support-url: "http://example.com/link/support"
+    openshift.io/provider-display-name: "Example, Inc. Department X"
+    iconClass: fa-cloud-upload
+    tags: "batchjob,camel,integration"
+message: "Your job with identifier ${JOB_SUFFIX} and parameter ${JOB_PARAM} has been scheduled, and will commence shortly."
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    creationTimestamp: null
+    name: templatedjob-${JOB_SUFFIX}
+  spec:
+    completions: 1
+    parallelism: 1
+    template:
+      metadata:
+        name: templatedjob
+      spec:
+        containers:
+        - command:
+          - perl
+          - -wle
+          - foreach (sort keys %ENV) { print "$_  =  $ENV{$_}"; } sleep(60);
+          env:
+          - name: GREETING_MESSAGE
+            valueFrom:
+              configMapKeyRef:
+                key: greeting.message
+                name: templatedjob
+          - name: JOB_PARAM
+            value: ${JOB_PARAM}
+          image: perl
+          name: templatedjob
+        restartPolicy: OnFailure
+parameters:
+- name: JOB_SUFFIX
+  generate: expression
+  from: "[a-z0-9]{8}"
+- name: JOB_PARAM
+  displayName: Job Parameter
+  description: A parameter to be passed to the job
+  value: joe.smith
+  
